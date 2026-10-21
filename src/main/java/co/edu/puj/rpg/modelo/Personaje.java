@@ -1,114 +1,79 @@
 package co.edu.puj.rpg.modelo;
 
-import co.edu.puj.rpg.modelo.enemigo.Enemigo;
+public abstract class Personaje implements ICombatiente {
 
-public class Personaje {
+    protected String nombre;
+    protected int vida;
+    protected int ataqueBase;
+    protected int posicionX;
+    protected int posicionY;
 
-    private String nombre;
-    private int puntosVida;
-    private int vidaMaxima;
-    private int puntosAtaque;
-    private int nivel;
-    private double oro;
-    private boolean estaVivo;
+    // Tope de vida para que las pociones no curen de más
+    private final int vidaMaxima;
 
-    // Constructor completo
-    public Personaje(String nombre, int vidaMaxima, int puntosAtaque, double oro) {
+    public Personaje(String nombre, int vida, int ataqueBase, int posicionX, int posicionY) {
         this.nombre = nombre;
-        this.vidaMaxima = vidaMaxima;
-        this.puntosAtaque = puntosAtaque;
-        this.nivel = 1;
-        this.estaVivo = true;
-        this.setPuntosVida(vidaMaxima);
-        this.oro = 0.0;
-        this.setOro(oro);
+        this.vida = Math.max(vida, 0);
+        this.vidaMaxima = this.vida;
+        this.ataqueBase = ataqueBase;
+        this.posicionX = posicionX;
+        this.posicionY = posicionY;
     }
 
-    // Constructor con valores por defecto, solo pide el nombre
-    public Personaje(String nombre) {
-        this(nombre, 100, 15, 50.0);
+    // Cada subclase define su propio ataque especial
+    public abstract void realizarAtaqueEspecial(Personaje objetivo);
+
+    // Mitigación base: cualquier personaje absorbe 2 puntos de daño
+    @Override
+    public void defender(int danoRecibido) {
+        int danoReal = Math.max(danoRecibido - 2, 0);
+        System.out.printf("%s se defiende y recibe %d de daño.%n", nombre, danoReal);
+        recibirDano(danoReal);
     }
 
-    // ---------- Comportamiento ----------
-
-    public void atacar(Enemigo enemigo) {
-        if (!this.estaVivo || enemigo == null) {
+    public void recibirDano(int cantidad) {
+        if (cantidad <= 0) {
             return;
         }
-        enemigo.recibirDamage(this.puntosAtaque);
+        this.vida -= cantidad;
+        if (this.vida < 0) {
+            this.vida = 0;
+        }
     }
 
-    public void usarPocion(int cantidadRestaurada) {
-        if (cantidadRestaurada <= 0) {
+    public void curar(int cantidad) {
+        if (cantidad <= 0 || !estaVivo()) {
             return;
         }
-        this.setPuntosVida(this.puntosVida + cantidadRestaurada);
+        this.vida = Math.min(this.vida + cantidad, vidaMaxima);
     }
 
-    public void recibirDamage(int cantidadDamage) {
-        if (cantidadDamage <= 0) {
-            return;
-        }
-        this.setPuntosVida(this.puntosVida - cantidadDamage);
+    public boolean estaVivo() {
+        return vida > 0;
     }
-
-    // ---------- Setters con validación ----------
-
-    public void setPuntosVida(int vida) {
-        if (vida <= 0) {
-            this.puntosVida = 0;
-            this.estaVivo = false;
-        } else if (vida > this.vidaMaxima) {
-            this.puntosVida = this.vidaMaxima;
-            this.estaVivo = true;
-        } else {
-            this.puntosVida = vida;
-            this.estaVivo = true;
-        }
-    }
-
-    public void setOro(double oro) {
-        if (oro < 0.0) {
-            System.out.println("Saldo insuficiente, la operación fue rechazada.");
-            return;
-        }
-        this.oro = oro;
-    }
-
-    public void setNivel(int nivel) {
-        if (nivel < 1) {
-            return;
-        }
-        this.nivel = nivel;
-    }
-
-    // ---------- Getters ----------
 
     public String getNombre() {
         return nombre;
     }
 
-    public int getPuntosVida() {
-        return puntosVida;
+    public int getVida() {
+        return vida;
     }
 
-    public int getVidaMaxima() {
-        return vidaMaxima;
+    public int getAtaqueBase() {
+        return ataqueBase;
     }
 
-    public int getPuntosAtaque() {
-        return puntosAtaque;
+    public int getPosicionX() {
+        return posicionX;
     }
 
-    public int getNivel() {
-        return nivel;
+    public int getPosicionY() {
+        return posicionY;
     }
 
-    public double getOro() {
-        return oro;
-    }
-
-    public boolean isEstaVivo() {
-        return estaVivo;
+    public void setPosicion(int x, int y) {
+        this.posicionX = x;
+        this.posicionY = y;
     }
 }

@@ -26,14 +26,14 @@ public class Enemigo {
         if (!this.estaVivo || heroe == null) {
             return;
         }
-        heroe.recibirDamage(this.puntosAtaque);
+        heroe.recibirDano(this.puntosAtaque);
     }
 
-    public void recibirDamage(int cantidadDamage) {
-        if (cantidadDamage <= 0) {
+    public void recibirDano(int cantidadDano) {
+        if (cantidadDano <= 0) {
             return;
         }
-        this.setPuntosVida(this.puntosVida - cantidadDamage);
+        this.setPuntosVida(this.puntosVida - cantidadDano);
     }
 
     public void setPuntosVida(int vida) {
