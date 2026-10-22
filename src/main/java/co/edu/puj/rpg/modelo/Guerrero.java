@@ -9,9 +9,10 @@ public class Guerrero extends Personaje {
         this.fuerzaEscudo = fuerzaEscudo;
     }
 
+    // Golpe de escudo: el ataque base más la mitad de la fuerza del escudo
     @Override
     public void realizarAtaqueEspecial(Personaje objetivo) {
-        int dano = ataqueBase + fuerzaEscudo / 2;
+        int dano = getAtaqueEfectivo() + fuerzaEscudo / 2;
         System.out.printf("%s golpea con su escudo a %s (%d de daño).%n", nombre, objetivo.getNombre(), dano);
         objetivo.defender(dano);
     }
@@ -23,12 +24,14 @@ public class Guerrero extends Personaje {
         super.defender(reducido);
     }
 
+    // Sobrecarga: ataque normal
     public void atacar(Personaje p) {
         atacar(p, false);
     }
 
+    // Sobrecarga: con modo furia el daño se duplica
     public void atacar(Personaje p, boolean modoFuria) {
-        int dano = modoFuria ? ataqueBase * 2 : ataqueBase;
+        int dano = modoFuria ? getAtaqueEfectivo() * 2 : getAtaqueEfectivo();
         System.out.printf("%s ataca a %s%s.%n", nombre, p.getNombre(), modoFuria ? " en modo furia" : "");
         p.defender(dano);
     }

@@ -7,7 +7,7 @@ public class Mago extends Personaje {
     protected int puntosMana;
 
     public Mago(String nombre, int vida, int ataqueBase, int posicionX, int posicionY, int puntosMana) {
-        super(nombre, vida, ataqueBase, posicionX, posicionY);
+        super(nombre, vida, ataqueBase, posicionX, posicionY, puntosMana);
         this.puntosMana = puntosMana;
     }
 
@@ -19,7 +19,7 @@ public class Mago extends Personaje {
             return;
         }
         puntosMana -= COSTO_HECHIZO;
-        int dano = ataqueBase * 2;
+        int dano = getAtaqueEfectivo() * 2;
         System.out.printf("%s lanza una bola de fuego a %s (%d de daño).%n", nombre, objetivo.getNombre(), dano);
         objetivo.defender(dano);
     }
@@ -31,7 +31,7 @@ public class Mago extends Personaje {
 
     // Sobrecarga: en modo furia el bastón pega con el ataque base completo
     public void atacar(Personaje p, boolean modoFuria) {
-        int dano = modoFuria ? ataqueBase : ataqueBase / 2;
+        int dano = modoFuria ? getAtaqueEfectivo() : getAtaqueEfectivo() / 2;
         System.out.printf("%s golpea a %s con su bastón.%n", nombre, p.getNombre());
         p.defender(dano);
     }

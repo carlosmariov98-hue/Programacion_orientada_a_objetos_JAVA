@@ -1,5 +1,6 @@
 package co.edu.puj.rpg.principal;
 
+import co.edu.puj.rpg.modelo.Arma;
 import co.edu.puj.rpg.modelo.Guerrero;
 import co.edu.puj.rpg.modelo.Mago;
 import co.edu.puj.rpg.modelo.Personaje;
@@ -29,6 +30,10 @@ public class Main {
         enemigos.add(new Guerrero("Orco", 70, 12, 4, 0, 8));
         enemigos.add(new Mago("Brujo", 50, 18, 0, 4, 40));
         enemigos.add(new Guerrero("Troll", 90, 14, 4, 4, 12));
+
+        // Armas de los héroes: suman daño a sus ataques
+        heroes.get(0).equiparArma(new Arma("Espada", 10));
+        heroes.get(1).equiparArma(new Arma("Bastón rúnico", 5));
 
         inventario.agregar(new Pocion("Poción pequeña", 25));
         inventario.agregar(new Pocion("Poción pequeña", 25));
@@ -256,10 +261,13 @@ public class Main {
                                       Inventario<Pocion> inventario) {
         System.out.println("\nHéroes:");
         for (Personaje h : heroes) {
+            String arma = (h.getArmaEquipada() != null) ? h.getArmaEquipada().getNombre() : "sin arma";
             if (h instanceof Mago mago) {
-                System.out.printf("  %-8s Vida: %3d  Maná: %3d%n", h.getNombre(), h.getVida(), mago.getPuntosMana());
+                System.out.printf("  %-8s Vida: %3d  Maná: %3d  Ataque: %2d (%s)%n",
+                        h.getNombre(), h.getVida(), mago.getPuntosMana(), h.getAtaqueEfectivo(), arma);
             } else {
-                System.out.printf("  %-8s Vida: %3d%n", h.getNombre(), h.getVida());
+                System.out.printf("  %-8s Vida: %3d  Ataque: %2d (%s)%n",
+                        h.getNombre(), h.getVida(), h.getAtaqueEfectivo(), arma);
             }
         }
         System.out.println("Enemigos:");
