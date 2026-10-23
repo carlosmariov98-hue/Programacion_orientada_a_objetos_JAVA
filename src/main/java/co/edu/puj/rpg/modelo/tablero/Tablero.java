@@ -1,5 +1,6 @@
 package co.edu.puj.rpg.modelo.tablero;
 
+import co.edu.puj.rpg.modelo.Arquero;
 import co.edu.puj.rpg.modelo.Guerrero;
 import co.edu.puj.rpg.modelo.Mago;
 import co.edu.puj.rpg.modelo.Personaje;
@@ -41,7 +42,7 @@ public class Tablero {
         }
         for (Personaje h : heroes) {
             if (h.estaVivo()) {
-                char simbolo = (h instanceof Guerrero) ? 'G' : (h instanceof Mago) ? 'M' : 'H';
+                char simbolo = (h instanceof Guerrero) ? 'G' : (h instanceof Mago) ? 'M' : (h instanceof Arquero) ? 'A' : 'H';
                 matriz[h.getPosicionY()][h.getPosicionX()] = simbolo;
             }
         }

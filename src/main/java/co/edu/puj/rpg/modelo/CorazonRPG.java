@@ -1,5 +1,9 @@
 package co.edu.puj.rpg.modelo;
 
+/**
+ * Núcleo de atributos vitales de un Personaje (composición 1..1).
+ * Es inmutable: no tiene setters y solo Personaje puede crearlo.
+ */
 public class CorazonRPG {
 
     private final int saludBase;

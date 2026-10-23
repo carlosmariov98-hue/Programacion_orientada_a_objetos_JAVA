@@ -1,13 +1,24 @@
 package co.edu.puj.rpg.modelo.inventario;
 
+import co.edu.puj.rpg.exception.CapacidadExcedidaException;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Inventario<T> {
 
     private List<T> items = new ArrayList<>();
+    private final int capacidadMaxima;
 
-    public void agregar(T item) {
+    public Inventario(int capacidadMaxima) {
+        this.capacidadMaxima = capacidadMaxima;
+    }
+
+    // Lanza CapacidadExcedidaException (verificada) si el inventario ya está lleno
+    public void agregar(T item) throws CapacidadExcedidaException {
+        if (items.size() >= capacidadMaxima) {
+            throw new CapacidadExcedidaException("inventario", capacidadMaxima);
+        }
         items.add(item);
     }
 
@@ -15,13 +26,16 @@ public class Inventario<T> {
         return items.get(index);
     }
 
-    // Saca el elemento del inventario y lo devuelve (para gastar una poción)
     public T quitar(int index) {
         return items.remove(index);
     }
 
     public int cantidad() {
         return items.size();
+    }
+
+    public int getCapacidadMaxima() {
+        return capacidadMaxima;
     }
 
     public boolean estaVacio() {

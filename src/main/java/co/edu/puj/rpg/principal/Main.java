@@ -1,283 +1,244 @@
 package co.edu.puj.rpg.principal;
 
-import co.edu.puj.rpg.modelo.Arma;
+import co.edu.puj.rpg.engine.Bestiario;
+import co.edu.puj.rpg.engine.Estadisticas;
+import co.edu.puj.rpg.exception.CapacidadExcedidaException;
+import co.edu.puj.rpg.exception.SinManaException;
+import co.edu.puj.rpg.modelo.Arquero;
 import co.edu.puj.rpg.modelo.Guerrero;
 import co.edu.puj.rpg.modelo.Mago;
+import co.edu.puj.rpg.modelo.PerfilJugador;
 import co.edu.puj.rpg.modelo.Personaje;
-import co.edu.puj.rpg.modelo.Pocion;
-import co.edu.puj.rpg.modelo.inventario.Inventario;
-import co.edu.puj.rpg.modelo.tablero.Tablero;
+import co.edu.puj.rpg.modelo.enums.TipoPersonaje;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
 
-    private static final Scanner sc = new Scanner(System.in);
-    private static final Random azar = new Random();
+    private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        Tablero tablero = new Tablero(2, 2);
-        List<Personaje> heroes = new ArrayList<>();
-        List<Personaje> enemigos = new ArrayList<>();
-        Inventario<Pocion> inventario = new Inventario<>();
-
-        heroes.add(new Guerrero("Thorin", 120, 15, 0, 0, 10));
-        heroes.add(new Mago("Gandalf", 80, 25, 0, 1, 50));
-
-        enemigos.add(new Guerrero("Orco", 70, 12, 4, 0, 8));
-        enemigos.add(new Mago("Brujo", 50, 18, 0, 4, 40));
-        enemigos.add(new Guerrero("Troll", 90, 14, 4, 4, 12));
-
-        // Armas de los héroes: suman daño a sus ataques
-        heroes.get(0).equiparArma(new Arma("Espada", 10));
-        heroes.get(1).equiparArma(new Arma("Bastón rúnico", 5));
-
-        inventario.agregar(new Pocion("Poción pequeña", 25));
-        inventario.agregar(new Pocion("Poción pequeña", 25));
-        inventario.agregar(new Pocion("Poción grande", 50));
-
-        Personaje principal = heroes.get(0);
-        boolean cofreAlcanzado = false;
-        int ronda = 0;
-
-        System.out.println("¡Comienza la batalla en la arena!");
+        List<Personaje> personajes = new ArrayList<>();
+        Bestiario bestiario = new Bestiario();
+        Estadisticas estadisticas = new Estadisticas();
+        PerfilJugador perfil = new PerfilJugador("Jugador 1");
+        int opcion;
 
         do {
-            ronda++;
-            System.out.printf("%n========== RONDA %d ==========%n", ronda);
-            redibujar(tablero, heroes, enemigos);
-            mostrarEstado(heroes, enemigos, inventario);
+            System.out.println("\n=== ARENA DE HÉROES RPG ===");
+            System.out.println("1. Crear Personaje");
+            System.out.println("2. Asignar Habilidad Única");
+            System.out.println("3. Registrar Victoria en Bestiario");
+            System.out.println("4. Ejecutar Ataque Especial");
+            System.out.println("5. Consultar Bestiario y Logros");
+            System.out.println("0. Salir");
+            opcion = leerEntero("Seleccione una opción: ");
 
-            // ---- Turno del jugador ----
-            for (Personaje heroe : heroes) {
-                if (!heroe.estaVivo()) {
-                    continue;
-                }
-                if (!hayVivos(enemigos) || cofreAlcanzado) {
+            switch (opcion) {
+                case 1:
+                    crearPersonaje(personajes);
                     break;
-                }
-
-                System.out.printf("%n--- Turno de %s ---%n", heroe.getNombre());
-                boolean accionHecha = false;
-
-                while (!accionHecha) {
-                    System.out.println("1. Atacar");
-                    System.out.println("2. Usar inventario");
-                    System.out.println("3. Mover en tablero");
-                    int opcion = leerEntero();
-
-                    switch (opcion) {
-                        case 1:
-                            accionHecha = atacar(heroe, enemigos);
-                            break;
-                        case 2:
-                            accionHecha = usarInventario(heroe, inventario);
-                            break;
-                        case 3:
-                            accionHecha = mover(heroe, heroes, enemigos, tablero);
-                            if (accionHecha && heroe == principal
-                                    && tablero.esCofre(heroe.getPosicionX(), heroe.getPosicionY())) {
-                                cofreAlcanzado = true;
-                            }
-                            break;
-                        default:
-                            System.out.println("Opción inválida, elige 1, 2 o 3.");
-                    }
-                }
-                redibujar(tablero, heroes, enemigos);
+                case 2:
+                    asignarHabilidad(personajes);
+                    break;
+                case 3:
+                    registrarVictoria(bestiario, perfil);
+                    break;
+                case 4:
+                    ejecutarAtaqueEspecial(personajes, estadisticas);
+                    break;
+                case 5:
+                    consultar(personajes, bestiario, perfil, estadisticas);
+                    break;
+                case 0:
+                    System.out.println("Cerrando la Arena de Héroes...");
+                    break;
+                default:
+                    System.err.println("Opción inválida, elige un número del 0 al 5.");
             }
+        } while (opcion != 0);
 
-            // ---- Turno de los enemigos ----
-            if (hayVivos(enemigos) && !cofreAlcanzado) {
-                System.out.println("\n*** Turno de los enemigos ***");
-                for (Personaje enemigo : enemigos) {
-                    List<Personaje> objetivos = vivos(heroes);
-                    if (objetivos.isEmpty()) {
-                        break;
-                    }
-                    if (!enemigo.estaVivo()) {
-                        continue; // sigue en la lista hasta la limpieza de bajas
-                    }
-                    Personaje objetivo = objetivos.get(azar.nextInt(objetivos.size()));
+        scanner.close();
+    }
 
-                    if (enemigo instanceof Mago mago && !mago.puedeLanzarHechizo()) {
-                        mago.atacar(objetivo);
-                    } else {
-                        enemigo.realizarAtaqueEspecial(objetivo);
-                    }
-                    if (!objetivo.estaVivo()) {
-                        System.out.printf("%s ha caído en combate.%n", objetivo.getNombre());
-                    }
-                }
+    // ---------- Opción 1 ----------
+
+    private static void crearPersonaje(List<Personaje> personajes) {
+        String nombre = leerTexto("Nombre del personaje: ");
+        if (nombre.isEmpty()) {
+            System.err.println("El nombre no puede estar vacío.");
+            return;
+        }
+
+        TipoPersonaje[] tipos = TipoPersonaje.values();
+        System.out.println("Tipo de personaje:");
+        for (int i = 0; i < tipos.length; i++) {
+            System.out.printf("%d. %s (ataque +%.1f, defensa +%.1f)%n", i + 1, tipos[i],
+                    tipos[i].getBonificadorAtaqueBase(), tipos[i].getBonificadorDefensaBase());
+        }
+        int eleccion = leerEntero("Elige el tipo: ");
+        if (eleccion < 1 || eleccion > tipos.length) {
+            System.err.println("Tipo inválido, no se creó el personaje.");
+            return;
+        }
+
+        TipoPersonaje tipo = tipos[eleccion - 1];
+        Personaje nuevo = switch (tipo) {
+            case GUERRERO -> new Guerrero(nombre, 100, 15, 0, 0, 10);
+            case MAGO -> new Mago(nombre, 80, 20, 0, 0, 50);
+            case ARQUERO -> new Arquero(nombre, 90, 17, 0, 0);
+        };
+        personajes.add(nuevo);
+        System.out.printf("Personaje creado: %s (%s) | estado: %s | vida: %d | maná: %d%n",
+                nuevo.getNombre(), nuevo.getTipoPersonaje(), nuevo.getEstado(),
+                nuevo.getVida(), nuevo.getManaActual());
+    }
+
+    // ---------- Opción 2 ----------
+
+    private static void asignarHabilidad(List<Personaje> personajes) {
+        Personaje p = elegirPersonaje(personajes);
+        if (p == null) {
+            return;
+        }
+        String habilidad = leerTexto("Nombre de la habilidad: ");
+        if (habilidad.isEmpty()) {
+            System.err.println("La habilidad no puede estar vacía.");
+            return;
+        }
+        try {
+            if (p.aprenderHabilidad(habilidad)) {
+                System.out.printf("%s aprendió '%s' (%d/%d habilidades).%n", p.getNombre(), habilidad,
+                        p.obtenerHabilidades().size(), Personaje.MAX_HABILIDADES);
+            } else {
+                System.out.printf("%s ya conoce la habilidad '%s'. No se agregó de nuevo.%n",
+                        p.getNombre(), habilidad);
             }
-
-            // ---- Limpieza de bajas ----
-            heroes.removeIf(p -> !p.estaVivo());
-            enemigos.removeIf(p -> !p.estaVivo());
-
-        } while (!heroes.isEmpty() && sumaVida(heroes) > 0 && !enemigos.isEmpty() && !cofreAlcanzado);
-
-        System.out.println();
-        redibujar(tablero, heroes, enemigos);
-        if (cofreAlcanzado) {
-            System.out.println("¡Victoria! Thorin llegó al cofre del tesoro.");
-        } else if (enemigos.isEmpty()) {
-            System.out.println("¡Victoria! Todos los enemigos fueron eliminados.");
-        } else {
-            System.out.println("Derrota... el escuadrón héroe fue aniquilado.");
+        } catch (CapacidadExcedidaException e) {
+            System.err.println(e.getMessage());
         }
-        sc.close();
     }
 
-    // ---------- Acciones del jugador ----------
+    // ---------- Opción 3 ----------
 
-    private static boolean atacar(Personaje heroe, List<Personaje> enemigos) {
-        List<Personaje> objetivos = vivos(enemigos);
-        System.out.println("Elige el objetivo:");
-        for (int i = 0; i < objetivos.size(); i++) {
-            Personaje e = objetivos.get(i);
-            System.out.printf("%d. %s (vida: %d)%n", i + 1, e.getNombre(), e.getVida());
+    private static void registrarVictoria(Bestiario bestiario, PerfilJugador perfil) {
+        String enemigo = leerTexto("Nombre del enemigo derrotado: ");
+        if (enemigo.isEmpty()) {
+            System.err.println("El nombre del enemigo no puede estar vacío.");
+            return;
         }
-        int eleccion = leerEntero();
-        if (eleccion < 1 || eleccion > objetivos.size()) {
-            System.out.println("Objetivo inválido.");
-            return false;
-        }
-        Personaje objetivo = objetivos.get(eleccion - 1);
+        boolean primeraVez = bestiario.registrarVictoria(enemigo);
+        System.out.printf("Victoria registrada. '%s' ha sido derrotado %d vez/veces.%n",
+                enemigo, bestiario.getVictorias(enemigo));
 
-        if (heroe instanceof Mago mago && !mago.puedeLanzarHechizo()) {
-            System.out.println("Sin maná suficiente, se usa el bastón.");
-            mago.atacar(objetivo);
-        } else {
-            heroe.realizarAtaqueEspecial(objetivo);
+        if (primeraVez) {
+            String logro = "Primera victoria contra " + enemigo;
+            if (perfil.registrarLogro(logro)) {
+                System.out.println("¡Logro desbloqueado: " + logro + "!");
+            }
         }
-        if (!objetivo.estaVivo()) {
-            System.out.printf("%s ha sido derrotado.%n", objetivo.getNombre());
-        }
-        return true;
     }
 
-    private static boolean usarInventario(Personaje heroe, Inventario<Pocion> inventario) {
-        if (inventario.estaVacio()) {
-            System.out.println("El inventario está vacío.");
-            return false;
+    // ---------- Opción 4 ----------
+
+    private static void ejecutarAtaqueEspecial(List<Personaje> personajes, Estadisticas estadisticas) {
+        Personaje p = elegirPersonaje(personajes);
+        if (p == null) {
+            return;
         }
-        Pocion pocion = inventario.quitar(0);
-        int vidaAntes = heroe.getVida();
-        heroe.curar(pocion.getCantidadCura());
-        System.out.printf("%s usa %s y recupera %d de vida. Quedan %d pociones.%n",
-                heroe.getNombre(), pocion.getNombre(), heroe.getVida() - vidaAntes, inventario.cantidad());
-        return true;
+        System.out.printf("Maná actual de %s: %d%n", p.getNombre(), p.getManaActual());
+        int costo = leerEntero("Costo de maná del ataque: ");
+
+        try {
+            p.lanzarHechizo(costo);
+            System.out.printf("%s ejecuta su ataque especial. Maná restante: %d%n",
+                    p.getNombre(), p.getManaActual());
+            estadisticas.acumular("Ataques especiales lanzados", 1);
+            estadisticas.acumular("Maná gastado", costo);
+        } catch (SinManaException e) {
+            System.err.println(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+        }
     }
 
-    private static boolean mover(Personaje heroe, List<Personaje> heroes,
-                                 List<Personaje> enemigos, Tablero tablero) {
-        System.out.println("1. Arriba  2. Abajo  3. Izquierda  4. Derecha");
-        int direccion = leerEntero();
+    // ---------- Opción 5 ----------
 
-        int nuevoX = heroe.getPosicionX();
-        int nuevoY = heroe.getPosicionY();
-        switch (direccion) {
-            case 1: nuevoY--; break;
-            case 2: nuevoY++; break;
-            case 3: nuevoX--; break;
-            case 4: nuevoX++; break;
-            default:
-                System.out.println("Dirección inválida.");
-                return false;
+    private static void consultar(List<Personaje> personajes, Bestiario bestiario,
+                                  PerfilJugador perfil, Estadisticas estadisticas) {
+        System.out.println("\n--- BESTIARIO ---");
+        bestiario.mostrarReporte();
+
+        System.out.println("\n--- LOGROS (orden alfabético) ---");
+        if (perfil.cantidadLogros() == 0) {
+            System.out.println("(ninguno)");
+        }
+        for (String logro : perfil.listarLogrosOrdenados()) {
+            System.out.println("- " + logro);
         }
 
-        if (!tablero.dentroDeLimites(nuevoX, nuevoY)) {
-            System.out.println("No puedes salir del tablero.");
-            return false;
+        System.out.println("\n--- PERSONAJES ---");
+        if (personajes.isEmpty()) {
+            System.out.println("(ninguno)");
         }
-        if (celdaOcupada(nuevoX, nuevoY, heroes, enemigos)) {
-            System.out.println("Esa casilla ya está ocupada.");
-            return false;
+        for (Personaje p : personajes) {
+            System.out.printf("%s [%s | %s] vida: %d | maná: %d | habilidades: %s%n",
+                    p.getNombre(), p.getTipoPersonaje(), p.getEstado(), p.getVida(),
+                    p.getManaActual(), p.obtenerHabilidades());
         }
-        heroe.setPosicion(nuevoX, nuevoY);
-        System.out.printf("%s se mueve a (%d, %d).%n", heroe.getNombre(), nuevoX, nuevoY);
-        return true;
+
+        System.out.println("\n--- ESTADÍSTICAS ---");
+        estadisticas.mostrarReporte();
     }
 
     // ---------- Utilidades ----------
 
-    private static int leerEntero() {
-        System.out.print("> ");
-        if (sc.hasNextInt()) {
-            return sc.nextInt();
+    private static Personaje elegirPersonaje(List<Personaje> personajes) {
+        if (personajes.isEmpty()) {
+            System.err.println("Primero crea un personaje (opción 1).");
+            return null;
         }
-        sc.next(); // descarta el texto que no era número
-        return -1;
+        if (personajes.size() == 1) {
+            System.out.println("Personaje seleccionado: " + personajes.get(0).getNombre());
+            return personajes.get(0);
+        }
+        System.out.println("Personajes disponibles:");
+        for (int i = 0; i < personajes.size(); i++) {
+            System.out.printf("%d. %s (%s)%n", i + 1, personajes.get(i).getNombre(),
+                    personajes.get(i).getTipoPersonaje());
+        }
+        int indice = leerEntero("Elige el personaje: ");
+        if (indice < 1 || indice > personajes.size()) {
+            System.err.println("Selección inválida.");
+            return null;
+        }
+        return personajes.get(indice - 1);
     }
 
-    private static List<Personaje> vivos(List<Personaje> lista) {
-        List<Personaje> resultado = new ArrayList<>();
-        for (Personaje p : lista) {
-            if (p.estaVivo()) {
-                resultado.add(p);
+    // Lee un entero y reintenta hasta que el usuario escriba uno válido
+    private static int leerEntero(String mensaje) {
+        int valor = 0;
+        boolean valido = false;
+        while (!valido) {
+            try {
+                System.out.print(mensaje);
+                valor = scanner.nextInt();
+                valido = true;
+            } catch (InputMismatchException e) {
+                System.err.println("Entrada inválida: debes escribir un número entero.");
+            } finally {
+                // Limpia el búfer: descarta el salto de línea o el texto que no era número
+                scanner.nextLine();
             }
         }
-        return resultado;
+        return valor;
     }
 
-    private static boolean hayVivos(List<Personaje> lista) {
-        return !vivos(lista).isEmpty();
-    }
-
-    private static int sumaVida(List<Personaje> lista) {
-        int total = 0;
-        for (Personaje p : lista) {
-            total += p.getVida();
-        }
-        return total;
-    }
-
-    private static boolean celdaOcupada(int x, int y, List<Personaje> heroes, List<Personaje> enemigos) {
-        for (Personaje p : vivos(heroes)) {
-            if (p.getPosicionX() == x && p.getPosicionY() == y) {
-                return true;
-            }
-        }
-        for (Personaje p : vivos(enemigos)) {
-            if (p.getPosicionX() == x && p.getPosicionY() == y) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void redibujar(Tablero tablero, List<Personaje> heroes, List<Personaje> enemigos) {
-        tablero.actualizar(heroes, enemigos);
-        System.out.println();
-        tablero.mostrarTablero(tablero.getMatriz());
-        System.out.println("G=Guerrero  M=Mago  E=Enemigo  C=Cofre");
-    }
-
-    private static void mostrarEstado(List<Personaje> heroes, List<Personaje> enemigos,
-                                      Inventario<Pocion> inventario) {
-        System.out.println("\nHéroes:");
-        for (Personaje h : heroes) {
-            String arma = (h.getArmaEquipada() != null) ? h.getArmaEquipada().getNombre() : "sin arma";
-            if (h instanceof Mago mago) {
-                System.out.printf("  %-8s Vida: %3d  Maná: %3d  Ataque: %2d (%s)%n",
-                        h.getNombre(), h.getVida(), mago.getPuntosMana(), h.getAtaqueEfectivo(), arma);
-            } else {
-                System.out.printf("  %-8s Vida: %3d  Ataque: %2d (%s)%n",
-                        h.getNombre(), h.getVida(), h.getAtaqueEfectivo(), arma);
-            }
-        }
-        System.out.println("Enemigos:");
-        for (Personaje e : enemigos) {
-            if (e instanceof Mago mago) {
-                System.out.printf("  %-8s Vida: %3d  Maná: %3d%n", e.getNombre(), e.getVida(), mago.getPuntosMana());
-            } else {
-                System.out.printf("  %-8s Vida: %3d%n", e.getNombre(), e.getVida());
-            }
-        }
-        System.out.printf("Pociones en inventario: %d%n", inventario.cantidad());
+    private static String leerTexto(String mensaje) {
+        System.out.print(mensaje);
+        return scanner.nextLine().trim();
     }
 }

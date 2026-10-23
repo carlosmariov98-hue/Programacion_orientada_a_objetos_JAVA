@@ -1,11 +1,13 @@
 package co.edu.puj.rpg.principal;
 
 import co.edu.puj.rpg.modelo.Arma;
+import co.edu.puj.rpg.modelo.Arquero;
 import co.edu.puj.rpg.modelo.Escuadron;
 import co.edu.puj.rpg.modelo.Gremio;
 import co.edu.puj.rpg.modelo.Guerrero;
 import co.edu.puj.rpg.modelo.Mago;
 import co.edu.puj.rpg.modelo.Personaje;
+import co.edu.puj.rpg.modelo.enums.RaridadItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,7 +71,7 @@ public class AplicacionArenaRPG {
             System.out.println("El nombre no puede estar vacío.");
             return;
         }
-        System.out.println("Clase: 1. Guerrero  2. Mago");
+        System.out.println("Clase: 1. Guerrero  2. Mago  3. Arquero");
         int clase = leerEntero();
         System.out.print("Nivel inicial: ");
         int nivel = leerEntero();
@@ -79,6 +81,8 @@ public class AplicacionArenaRPG {
             nuevo = new Guerrero(nombre, 100, 15, 0, 0, 10);
         } else if (clase == 2) {
             nuevo = new Mago(nombre, 80, 20, 0, 0, 50);
+        } else if (clase == 3) {
+            nuevo = new Arquero(nombre, 90, 17, 0, 0);
         } else {
             System.out.println("Clase inválida, no se creó el personaje.");
             return;
@@ -201,7 +205,17 @@ public class AplicacionArenaRPG {
                 System.out.println("Datos del arma inválidos (nombre vacío o daño menor que 1).");
                 return;
             }
-            p.equiparArma(new Arma(nombreArma, danio));
+            RaridadItem[] rarezas = RaridadItem.values();
+            System.out.println("Rareza del arma:");
+            for (int i = 0; i < rarezas.length; i++) {
+                System.out.printf("%d. %s (x%.1f)%n", i + 1, rarezas[i], rarezas[i].getMultiplicadorStat());
+            }
+            int eleccion = leerEntero();
+            if (eleccion < 1 || eleccion > rarezas.length) {
+                System.out.println("Rareza inválida.");
+                return;
+            }
+            p.equiparArma(new Arma(nombreArma, danio, rarezas[eleccion - 1]));
             System.out.printf("Ataque total de %s: %d%n", p.getNombre(), p.calcularAtaqueTotal());
         } else if (accion == 2) {
             p.desequiparArma();
